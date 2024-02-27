@@ -1,0 +1,545 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 1,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unitScale": true
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.3.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"Energy\")\r\n  |> range(start: -30d, stop: now())\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"flexible_tariff\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"electricity_standing_charge\")\r\n  |> map(fn: (r) => ({_value: r._value, _time: r._time, _field: \"Flexible\"}))\r\n  |> aggregateWindow(every: 1d, fn: mean)",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "hide": false,
+          "query": "from(bucket: \"Energy\")\r\n  |> range(start: -30d, stop: now())\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"tracker_tariff\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"electricity_standing_charge\")\r\n  |> map(fn: (r) => ({_value: r._value, _time: r._time, _field: \"Tracker\"}))\r\n  |> aggregateWindow(every: 1d, fn: mean)",
+          "refId": "B"
+        }
+      ],
+      "title": "Electricity Standing Charges",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unitScale": true
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.3.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"Energy\")\r\n  |> range(start: -30d, stop: now())\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"flexible_tariff\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"gas_standing_charge\")\r\n  |> map(fn: (r) => ({_value: r._value, _time: r._time, _field: \"Flexible\"}))\r\n  |> aggregateWindow(every: 1d, fn: mean)",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "hide": false,
+          "query": "from(bucket: \"Energy\")\r\n  |> range(start: -30d, stop: now())\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"tracker_tariff\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"gas_standing_charge\")\r\n  |> map(fn: (r) => ({_value: r._value, _time: r._time, _field: \"Tracker\"}))\r\n  |> aggregateWindow(every: 1d, fn: mean)",
+          "refId": "B"
+        }
+      ],
+      "title": "Gas Standing Charges",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unitScale": true
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.3.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"Energy\")\r\n  |> range(start: -30d, stop: now())\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"flexible_tariff\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"electricity_unit_rate\")\r\n  |> map(fn: (r) => ({_value: r._value, _time: r._time, _field: \"Flexible\"}))\r\n  |> aggregateWindow(every: 1d, fn: mean)",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "hide": false,
+          "query": "from(bucket: \"Energy\")\r\n  |> range(start: -30d, stop: now())\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"tracker_tariff\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"electricity_unit_rate\")\r\n  |> map(fn: (r) => ({_value: r._value, _time: r._time, _field: \"Tracker\"}))\r\n  |> aggregateWindow(every: 1d, fn: mean)",
+          "refId": "B"
+        }
+      ],
+      "title": "Electricity Unit Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unitScale": true
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.3.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"Energy\")\r\n  |> range(start: -30d, stop: now())\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"flexible_tariff\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"gas_unit_rate\")\r\n  |> map(fn: (r) => ({_value: r._value, _time: r._time, _field: \"Flexible\"}))\r\n  |> aggregateWindow(every: 1d, fn: mean)",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "hide": false,
+          "query": "from(bucket: \"Energy\")\r\n  |> range(start: -30d, stop: now())\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"tracker_tariff\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"gas_unit_rate\")\r\n  |> map(fn: (r) => ({_value: r._value, _time: r._time, _field: \"Tracker\"}))\r\n  |> aggregateWindow(every: 1d, fn: mean)",
+          "refId": "B"
+        }
+      ],
+      "title": "Gas Unit Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "currencyGBP",
+          "unitScale": true
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.3.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"Energy\")\r\n  |> range(start: -30d, stop: now())\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"electricity_cost\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"flexible_tariff_cost\")\r\n  |> map(fn: (r) => ({_value: r._value / 100.0, _time: r._time, _field: \"Flexible\"}))\r\n",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "hide": false,
+          "query": "from(bucket: \"Energy\")\r\n  |> range(start: -30d, stop: now())\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"electricity_cost\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"tracker_tariff_cost\")\r\n  |> map(fn: (r) => ({_value: r._value / 100.0, _time: r._time, _field: \"Tracker\"}))",
+          "refId": "B"
+        }
+      ],
+      "title": "Electricity Cost",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unitScale": true
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.3.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"Energy\")\r\n  |> range(start: -30d, stop: now())\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"gas_cost\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"flexible_tariff_cost\")\r\n  |> map(fn: (r) => ({_value: r._value / 100.0, _time: r._time, _field: \"Flexible\"}))",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "hide": false,
+          "query": "from(bucket: \"Energy\")\r\n  |> range(start: -30d, stop: now())\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"gas_cost\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"tracker_tariff_cost\")\r\n  |> map(fn: (r) => ({_value: r._value / 100.0, _time: r._time, _field: \"Tracker\"}))",
+          "refId": "B"
+        }
+      ],
+      "title": "Gas Cost",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": false,
+  "schemaVersion": 39,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Energy Cost",
+  "uid": "a9056d42-7a68-4524-934a-ae0ee6056114",
+  "version": 3,
+  "weekStart": ""
+}

@@ -1,0 +1,55 @@
+version: '3'
+
+services:
+  energy-data-collector:
+    build:
+      context: energy-data-collector/.
+    environment:
+      - CONFIG_PATH
+    volumes:
+      - ./energy-data-collector/config.json:/app/config.json
+    depends_on:
+      - influxdb
+      - grafana
+    networks:
+      - energy-dashboard-network
+
+  influxdb:
+    image: influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE
+      - DOCKER_INFLUXDB_INIT_ORG
+      - DOCKER_INFLUXDB_INIT_BUCKET
+      - DOCKER_INFLUXDB_INIT_USERNAME
+      - DOCKER_INFLUXDB_INIT_PASSWORD
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN
+    volumes:
+      - influxdb-data:/var/lib/influxdb
+    networks:
+      - energy-dashboard-network
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER
+      - GF_SECURITY_ADMIN_PASSWORD
+    depends_on:
+      - influxdb
+    networks:
+      - energy-dashboard-network
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+
+networks:
+  energy-dashboard-network:
+    driver: bridge
+
+volumes:
+  influxdb-data:
+  grafana-data:
