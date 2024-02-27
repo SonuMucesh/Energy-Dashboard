@@ -22,7 +22,7 @@ jobs:
           python-version: 3.9
 
       - name: Copy requirements.txt to tests folder
-        run: cp requirements.txt energy-data-collector/tests/
+        run: cp energy-data-collector/requirements.txt energy-data-collector/tests/
 
       - name: Install dependencies
         run: pip install -r requirements.txt
@@ -31,7 +31,7 @@ jobs:
         run: pip install pytest
 
       - name: Copy main.py to tests folder
-        run: cp main.py energy-data-collector/tests/
+        run: cp energy-data-collector/main.py energy-data-collector/tests/
 
       - name: Run tests
         run: pytest energy-data-collector/tests/
