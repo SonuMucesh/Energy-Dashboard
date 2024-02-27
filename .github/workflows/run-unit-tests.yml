@@ -21,6 +21,9 @@ jobs:
         with:
           python-version: 3.9
 
+      - name: Copy requirements.txt to tests folder
+        run: cp requirements.txt energy-data-collector/tests/
+
       - name: Install dependencies
         run: pip install -r requirements.txt
 

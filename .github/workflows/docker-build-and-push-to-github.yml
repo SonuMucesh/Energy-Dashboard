@@ -30,6 +30,6 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
-        context: .
+        context: energy-data-collector/.
         push: true
         tags: ghcr.io/sonumucesh/energy-dashboard:latest
