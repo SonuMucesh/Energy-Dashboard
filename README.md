@@ -60,25 +60,24 @@ Here's a brief explanation of each configuration option:
 
 ## Docker Environment Variables
 
-The `docker-compose.yml` file contains various environment variables that are used to configure the Docker containers
-for InfluxDB and Grafana. Here's a brief explanation of each environment variable:
+The `docker-compose.yml` file uses environment variables to configure the Docker containers for InfluxDB and Grafana.
 
-- `CONFIG_PATH`: This is the path to the configuration file for your application. In your case, it's set
-  to `/app/config.json`.
-- `DOCKER_INFLUXDB_INIT_MODE`: This is used to specify the initial setup mode for the InfluxDB Docker container. It's
-  set to `setup`, which means the container will be initialized with a new database, user, and bucket.
-- `DOCKER_INFLUXDB_INIT_ORG`: This is the name of the organization to be created during the initial setup of the
-  InfluxDB Docker container.
-- `DOCKER_INFLUXDB_INIT_BUCKET`: This is the name of the bucket to be created during the initial setup of the InfluxDB
-  Docker container.
-- `DOCKER_INFLUXDB_INIT_USERNAME`: This is the username of the user to be created during the initial setup of the
-  InfluxDB Docker container.
-- `DOCKER_INFLUXDB_INIT_PASSWORD`: This is the password of the user to be created during the initial setup of the
-  InfluxDB Docker container.
-- `DOCKER_INFLUXDB_INIT_ADMIN_TOKEN`: This is the token to be associated with the admin user during the initial setup of
-  the InfluxDB Docker container.
-- `GF_SECURITY_ADMIN_USER`: This is the username for the admin user of the Grafana Docker container.
-- `GF_SECURITY_ADMIN_PASSWORD`: This is the password for the admin user of the Grafana Docker container.
+### Application Configuration
+
+- `CONFIG_PATH`: Path to the application configuration file. Set to `/app/config.json`.
+
+### InfluxDB Initialization
+
+- `DOCKER_INFLUXDB_INIT_MODE`: Initial setup mode for the InfluxDB Docker container.
+- `DOCKER_INFLUXDB_INIT_ORG`: Name of the organization to be created during the initial setup.
+- `DOCKER_INFLUXDB_INIT_BUCKET`: Name of the bucket to be created during the initial setup.
+- `DOCKER_INFLUXDB_INIT_USERNAME`: Username of the user to be created during the initial setup.
+- `DOCKER_INFLUXDB_INIT_PASSWORD`: Password of the user to be created during the initial setup.
+- `DOCKER_INFLUXDB_INIT_ADMIN_TOKEN`: Token to be associated with the admin user during the initial setup.
+
+### Grafana Admin User
+
+- `GF_SECURITY_ADMIN_USER`: Username for the admin user of the Grafana Docker container.
 
   These environment variables are used to configure the Docker containers for InfluxDB and Grafana, as well as to
   specify the path to the configuration file for your application.
