@@ -1,31 +1,35 @@
 import unittest
-from unittest.mock import patch, MagicMock
-from main import fetch_usage
+from unittest.mock import patch, Mock
+import main
 
 class TestFetchUsage(unittest.TestCase):
-    def setUp(self):
-        self.config = {
-            'BASE_64_API_KEY': 'c2tfbGl2ZV9aZFBtUEoxaWU5M29BVmo4dElzYlB1MVg6',
-            'GAS_MPRN': '7592684900',
-            'GAS_SERIAL_NUMBER': 'E6S17061332161',
-            'ELECTRICITY_MPAN': '2500000477284',
-            'ELECTRICITY_SERIAL_NUMBER': '19L4007890'
-        }
-        self.period_to = '2022-01-01T00:00:00'
-        self.period_from = '2022-01-01T00:00:00'
-
-    @patch('requests.get')
+    @patch('main.requests.get')
     def test_fetch_usage(self, mock_get):
-        mock_resp = MagicMock()
-        mock_resp.json.return_value = {'results': [{'consumption': 5, 'interval_end': '2022-01-02T00:00:00'}]}
-        mock_get.return_value = mock_resp
+        # Mock the API responses
+        mock_get.return_value.json.return_value = {
+            'results': [{'consumption': 10}],
+            'next': None
+        }
 
-        result = fetch_usage(self.config['GAS_MPRN'], self.config['GAS_SERIAL_NUMBER'],
-                             self.config['ELECTRICITY_MPAN'], self.config['ELECTRICITY_SERIAL_NUMBER'],
-                             self.period_to, self.period_from, self.config)
+        # Define a sample configuration
+        config = {
+            'BASE_64_API_KEY': 'sample_api_key',
+            'GAS_MPRN': 'sample_gas_mprn',
+            'GAS_SERIAL_NUMBER': 'sample_gas_serial_number',
+            'ELECTRICITY_MPAN': 'sample_electricity_mpan',
+            'ELECTRICITY_SERIAL_NUMBER': 'sample_electricity_serial_number'
+        }
 
-        self.assertIsInstance(result, tuple)
-        self.assertEqual(len(result), 2)
+        # Call the function with the sample configuration
+        electricity_data, gas_data = main.fetch_usage(
+            config['GAS_MPRN'], config['GAS_SERIAL_NUMBER'],
+            config['ELECTRICITY_MPAN'], config['ELECTRICITY_SERIAL_NUMBER'],
+            config
+        )
+
+        # Assert that the function returned the expected results
+        self.assertEqual(electricity_data, [{'consumption': 10}])
+        self.assertEqual(gas_data, [{'consumption': 10}])
 
 if __name__ == '__main__':
     unittest.main()

@@ -5,8 +5,10 @@ import json
 from influxdb_client import InfluxDBClient
 import sched
 from influxdb_client.client.write_api import SYNCHRONOUS
+from dateutil.parser import parse
 
 s = sched.scheduler(time.time, time.sleep)
+initial_ingestion = False
 
 
 def load_config():
@@ -21,32 +23,53 @@ def load_config():
     except Exception as e:
         print(f"An exception occurred at load_config: {e}")
 
+def fetch_data(meter_points, serial_number, headers):
+    response = requests.get(
+        f'https://api.octopus.energy/v1/{meter_points}/{serial_number}/consumption/',
+        headers=headers)
+    data = []
+    data += response.json()['results']
+    while response.json()['next']:
+        data += response.json()['results']
+        response = requests.get(response.json()['next'], headers=headers)
+    return data
 
-def fetch_usage(gas_mprn, gas_serial_number, electricity_mpan, electricity_serial_number, period_to, period_from,
-                config):
+
+def fetch_usage(gas_mprn, gas_serial_number, electricity_mpan, electricity_serial_number, config):
     """
     Fetch usage data from the Octopus API.
     :param gas_mprn: The MPRN of the gas meter.
     :param gas_serial_number: The serial number of the gas meter.
     :param electricity_mpan: The MPAN of the electricity meter.
     :param electricity_serial_number: The serial number of the electricity meter.
-    :param period_to: The period to get the usage data for.
-    :param period_from: The period from get the usage data for.
     :param config: The configuration.
     :return: Electricity usage, gas usage
     """
     try:
+        global initial_ingestion
         headers = {'Authorization': 'Basic ' + config['BASE_64_API_KEY']}
-        params = {'period_from': period_from, 'period_to': period_to}
         response_gas = requests.get(
             f'https://api.octopus.energy/v1/gas-meter-points/{gas_mprn}/meters/{gas_serial_number}/consumption/',
-            headers=headers, params=params)
+            headers=headers)
         response_electricity = requests.get(
             f'https://api.octopus.energy/v1/electricity-meter-points/{electricity_mpan}/meters/{electricity_serial_number}/consumption/',
-            headers=headers, params=params)
-        gas_data = response_gas.json()
-        electricity_data = response_electricity.json()
-        return electricity_data['results'], gas_data['results']
+            headers=headers)
+        electricity_data = []
+        gas_data = []
+        if all:
+            electricity_data += response_electricity.json()['results']
+            gas_data += response_gas.json()['results']
+            while response_gas.json()['next']:
+                response_gas = requests.get(response_gas.json()['next'], headers=headers)
+                gas_data += response_gas.json()['results']
+            while response_electricity.json()['next']:
+                response_electricity = requests.get(response_electricity.json()['next'], headers=headers)
+                electricity_data += response_electricity.json()['results']
+            return electricity_data, gas_data
+        else:
+            gas_data = response_gas.json()
+            electricity_data = response_electricity.json()
+            return electricity_data['results'], gas_data['results']
     except Exception as e:
         print(f"An exception occurred at fetch_usage: {e}")
 
@@ -75,30 +98,34 @@ def fetch_tariff(tariff_code, electricity_fuel_type, gas_fuel_type, fuel_type_co
         print(f"An exception occurred at fetch_tariff: {e}")
 
 
-def calculate_cost(usage, unit_rate, standing_charge):
+def calculate_cost(fuel_type, usage, unit_rate):
     """
     Calculate the cost of energy usage.
+    :param fuel_type: The fuel type of the energy.
     :param usage: The amount of energy used in kWh.
     :param unit_rate: The unit rate of the energy in pence.
-    :param standing_charge: The standing charge of the energy in pence.
     :return: The cost of the energy usage in pence.
     """
 
     try:
-        return usage * unit_rate + standing_charge
+        if fuel_type == "electricity":
+            return usage * unit_rate
+        elif fuel_type == "gas":
+            return usage * 39.3 * 1.02264 / 3.6 * unit_rate
     except Exception as e:
         print(f"An exception occurred at calculate_cost: {e}")
 
 
-def fetch_and_prepare_data(last_timestamp, config):
+def fetch_and_prepare_data(config):
     """
     Fetch the data from the Octopus API and prepare it for InfluxDB.
-    :param last_timestamp: The last timestamp the data was fetched.
     :param config: The configuration.
     :return: The data prepared for InfluxDB.
     """
 
     try:
+        global initial_ingestion
+
         # Fetch the tariff data for the flexible
         flex_electricity_unit_rate, flex_electricity_standing_charge, \
             flex_gas_unit_rate, flex_gas_standing_charge = fetch_tariff(
@@ -114,10 +141,15 @@ def fetch_and_prepare_data(last_timestamp, config):
             config['OCTOPUS_PAYMENT_METHOD_TRACKER'])
 
         # Fetch the usage data
-        electricity_usage, gas_usage = fetch_usage(config['GAS_MPRN'], config['GAS_SERIAL_NUMBER'],
-                                                   config['ELECTRICITY_MPAN'], config['ELECTRICITY_SERIAL_NUMBER'],
-                                                   datetime.datetime.now().isoformat(),
-                                                   last_timestamp, config)
+        if initial_ingestion:
+            electricity_usage, gas_usage = fetch_usage(config['GAS_MPRN'], config['GAS_SERIAL_NUMBER'],
+                                                       config['ELECTRICITY_MPAN'], config['ELECTRICITY_SERIAL_NUMBER'],
+                                                       config)
+            initial_ingestion = False
+        else:
+            electricity_usage, gas_usage = fetch_usage(config['GAS_MPRN'], config['GAS_SERIAL_NUMBER'],
+                                                       config['ELECTRICITY_MPAN'], config['ELECTRICITY_SERIAL_NUMBER'],
+                                                       config)
 
         electricity_cost_measurements = []
         electricity_usage_measurements = []
@@ -127,17 +159,19 @@ def fetch_and_prepare_data(last_timestamp, config):
         # For each usage data, calculate the cost of the energy usage for the flexible and tracker tariffs
         if len(electricity_usage) != 0:
             for i in range(len(electricity_usage)):
-                flex_electricity_cost = calculate_cost(electricity_usage[i]['consumption'],
-                                                       flex_electricity_unit_rate,
-                                                       flex_electricity_standing_charge)
+                flex_electricity_cost = calculate_cost("electricity", electricity_usage[i]['consumption'],
+                                                       flex_electricity_unit_rate)
 
-                tracker_electricity_cost = calculate_cost(electricity_usage[i]['consumption'],
-                                                          tracker_electricity_unit_rate,
-                                                          tracker_electricity_standing_charge)
+                tracker_electricity_cost = calculate_cost("electricity", electricity_usage[i]['consumption'],
+                                                          tracker_electricity_unit_rate)
+
+                electricity_time = (parse(electricity_usage[i]['interval_start'])
+                        + (parse(electricity_usage[i]['interval_end'])
+                            - parse(electricity_usage[i]['interval_start'])) / 2).isoformat()
 
                 electricity_cost_measurement = {
                     "measurement": "electricity_cost",
-                    "time": electricity_usage[i]['interval_end'],
+                    "time": electricity_time,
                     "fields": {
                         "flexible_tariff_cost": flex_electricity_cost,
                         "tracker_tariff_cost": tracker_electricity_cost
@@ -146,7 +180,7 @@ def fetch_and_prepare_data(last_timestamp, config):
 
                 electricity_usage_measurement = {
                     "measurement": "electricity_usage",
-                    "time": electricity_usage[i]['interval_end'],
+                    "time": electricity_time,
                     "fields": {
                         "usage": electricity_usage[i]['consumption']
                     }
@@ -157,17 +191,19 @@ def fetch_and_prepare_data(last_timestamp, config):
 
         if len(gas_usage) != 0:
             for i in range(len(gas_usage)):
-                flex_gas_cost = calculate_cost(gas_usage[i]['consumption'],
-                                               flex_gas_unit_rate,
-                                               flex_gas_standing_charge)
+                flex_gas_cost = calculate_cost("gas", gas_usage[i]['consumption'],
+                                               flex_gas_unit_rate)
 
-                tracker_gas_cost = calculate_cost(gas_usage[i]['consumption'],
-                                                  tracker_gas_unit_rate,
-                                                  tracker_gas_standing_charge)
+                tracker_gas_cost = calculate_cost("gas", gas_usage[i]['consumption'],
+                                                  tracker_gas_unit_rate)
+
+                gas_time = (parse(gas_usage[i]['interval_start'])
+                        + (parse(gas_usage[i]['interval_end'])
+                            - parse(gas_usage[i]['interval_start'])) / 2).isoformat()
 
                 gas_cost_measurement = {
                     "measurement": "gas_cost",
-                    "time": electricity_usage[i]['interval_end'],
+                    "time": gas_time,
                     "fields": {
                         "flexible_tariff_cost": flex_gas_cost,
                         "tracker_tariff_cost": tracker_gas_cost
@@ -176,7 +212,7 @@ def fetch_and_prepare_data(last_timestamp, config):
 
                 gas_usage_measurement = {
                     "measurement": "gas_usage",
-                    "time": electricity_usage[i]['interval_end'],
+                    "time": gas_time,
                     "fields": {
                         "usage": gas_usage[i]['consumption']
                     }
@@ -225,25 +261,7 @@ def store_data(config):
     try:
         client = InfluxDBClient(url=config['INFLUXDB_HOST'], token=config['INFLUXDB_TOKEN'], org=config['INFLUXDB_ORG'])
 
-        # Fetch the latest ingestion timestamp from InfluxDB in the electricity_usage measurement or gas_usage measurement
-        # whichever one is the latest
-        try:
-            query_api = client.query_api()
-            query = f'from(bucket: "{config["INFLUXDB_BUCKET"]}") ' \
-                    f'|> range(start: -24h) ' \
-                    f'|> filter(fn: (r) => r["_field"] == "usage") ' \
-                    f'|> filter(fn: (r) => r._measurement == "electricity_usage" or r._measurement == "gas_usage") ' \
-                    f'|> sort(columns: ["_time"], desc: true) ' \
-                    f'|> limit(n: 1)'
-            tables = query_api.query(query)
-            last_timestamp = tables[0].records[0].get_time().isoformat()
-        except Exception as e:
-            print(f"An exception occurred at store_data: {e}")
-            print("Using default timestamp which is 365 days ago")
-            last_timestamp = datetime.datetime.now() - datetime.timedelta(days=365)
-
-
-        json_body = fetch_and_prepare_data(last_timestamp, config)
+        json_body = fetch_and_prepare_data(config)
 
         write_api = client.write_api(write_options=SYNCHRONOUS)
 

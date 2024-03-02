@@ -1,23 +1,21 @@
 import unittest
-from main import calculate_cost
+import main
 
 class TestCalculateCost(unittest.TestCase):
+    def test_calculate_cost_electricity(self):
+        # Test the calculation for electricity
+        result = main.calculate_cost("electricity", 10, 0.15)
+        self.assertEqual(result, 1.5)
 
-    def test_calculate_cost(self):
-        # Test with positive values
-        self.assertEqual(calculate_cost(10, 0.2, 0.5), 2.5)
+    def test_calculate_cost_gas(self):
+        # Test the calculation for gas
+        result = main.calculate_cost("gas", 10, 0.15)
+        self.assertAlmostEqual(result, 16.74573, places=5)
 
-        # Test with zero usage
-        self.assertEqual(calculate_cost(0, 0.2, 0.5), 0.5)
-
-        # Test with zero unit rate
-        self.assertEqual(calculate_cost(10, 0, 0.5), 0.5)
-
-        # Test with zero standing charge
-        self.assertEqual(calculate_cost(10, 0.2, 0), 2.0)
-
-        # Test with all zero values
-        self.assertEqual(calculate_cost(0, 0, 0), 0)
+    def test_calculate_cost_invalid_fuel_type(self):
+        # Test the calculation for an invalid fuel type
+        result = main.calculate_cost("invalid", 10, 0.15)
+        self.assertIsNone(result)
 
 if __name__ == '__main__':
     unittest.main()
